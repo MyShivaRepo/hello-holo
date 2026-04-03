@@ -34,6 +34,9 @@ async function initHolochain(retries = 40, delay = 5000) {
       const contactsCell = ourApp.cell_info?.contacts?.[0]?.value;
       if (!contactsCell) throw new Error('cell contacts non trouvée');
       cellId = [contactsCell.cell_id.dna_hash, contactsCell.cell_id.agent_pub_key];
+      console.log('cellId[0]:', cellId[0]?.constructor?.name, 'len:', cellId[0]?.length, '→', Buffer.from(cellId[0] ?? []).toString('base64').slice(0, 20));
+      console.log('cellId[1]:', cellId[1]?.constructor?.name, 'len:', cellId[1]?.length, '→', Buffer.from(cellId[1] ?? []).toString('base64').slice(0, 20));
+      console.log('cell_info raw:', JSON.stringify(ourApp.cell_info?.contacts?.[0]));
 
       // Autoriser les credentials de signature pour cette cell
       console.log('→ authorizeSigningCredentials...');
