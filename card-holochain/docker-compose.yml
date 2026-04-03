@@ -19,6 +19,8 @@ services:
     environment:
       - CONDUCTOR_ADMIN_URL=ws://edgenode:4444
       - PORT=3001
+    volumes:
+      - ./ui:/ui
     restart: unless-stopped
 
 volumes:
