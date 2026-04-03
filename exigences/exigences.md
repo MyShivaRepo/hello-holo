@@ -1,5 +1,5 @@
 ## Fichier d'expression du besoin fonctionnel
-Le besoin exprimé ici est commun aux applications ```card-classic``` eyt ```card-holochain```
+Le besoin exprimé ici est commun aux applications ```card-classic``` et ```card-holochain```
 
 # Modèle de concepts
 L'application ne manipule qu'un seul concept : le ```Contact```.    
