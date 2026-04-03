@@ -29,3 +29,6 @@ Un bouton ```Valider``` permet d'enregister un nouveau ```Contact``` ou bien de 
 L'application doit être hébergé dans un container Docker.   
 Elle est accessible via un port particulier sur la machine locale (port à définir en début de développement).   
 L'architecture de l'application doit permettre d'apporter des modifications à l'interface utilisateur sans perdre la base de données existante.   
+
+L'application ```card-classic``` <a href="[http://localhost:3000)/">http://localhost:3000</a>
+L'application ```card-holochain``` <a href="[http://localhost:3001)/">http://localhost:3001</a>
