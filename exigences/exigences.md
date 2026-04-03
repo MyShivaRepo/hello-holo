@@ -26,6 +26,6 @@ Le mode ```fiche``` est le mode utilisé pour ajouter et/ou modifier un ```Conta
 Un bouton ```Valider``` permet d'enregister un nouveau ```Contact``` ou bien de valider les modifications d'un ```Contact``` existant.
 
 # Exigences techniques
-L'application doit être hébergé dans un container Docker.
-Elle est accessible via un port particulier suir la machine locale (port à définir en début de dévelopement)
-L'architecture de l'application doit permettre d'apporter des modifications à l'interface utilisateur sans perdre la base de données existante.
+L'application doit être hébergé dans un container Docker.   
+Elle est accessible via un port particulier sur la machine locale (port à définir en début de développement).   
+L'architecture de l'application doit permettre d'apporter des modifications à l'interface utilisateur sans perdre la base de données existante.   
