@@ -33,32 +33,22 @@ async function initHolochain(retries = 40, delay = 5000) {
       // Récupérer le cell_id
       const contactsCell = ourApp.cell_info?.contacts?.[0]?.value;
       if (!contactsCell) throw new Error('cell contacts non trouvée');
-      cellId = [contactsCell.cell_id.dna_hash, contactsCell.cell_id.agent_pub_key];
-      console.log('cellId[0]:', cellId[0]?.constructor?.name, 'len:', cellId[0]?.length, '→', Buffer.from(cellId[0] ?? []).toString('base64').slice(0, 20));
-      console.log('cellId[1]:', cellId[1]?.constructor?.name, 'len:', cellId[1]?.length, '→', Buffer.from(cellId[1] ?? []).toString('base64').slice(0, 20));
-      console.log('cell_info raw:', JSON.stringify(ourApp.cell_info?.contacts?.[0]));
-
+      cellId = contactsCell.cell_id;
       // Autoriser les credentials de signature pour cette cell
-      console.log('→ authorizeSigningCredentials...');
       await adminWs.authorizeSigningCredentials(cellId);
-      console.log('→ authorizeSigningCredentials OK');
 
       // Attacher une interface applicative
-      console.log('→ attachAppInterface...');
       const { port: appPort } = await adminWs.attachAppInterface({
         port: 0,
         allowed_origins: '*',
       });
-      console.log(`→ attachAppInterface OK, port=${appPort}`);
 
-      // Autoriser la signing key pour l'app
-      console.log('→ issueAppAuthenticationToken...');
+      // Émettre le token d'authentification pour l'app
       const credentials = await adminWs.issueAppAuthenticationToken({
         installed_app_id: installedAppId,
         expiry_seconds: 0,
         single_use: false,
       });
-      console.log('→ issueAppAuthenticationToken OK');
 
       adminWs.client.close();
 
