@@ -20,7 +20,7 @@ async function initHolochain(retries = 40, delay = 5000) {
   for (let i = 0; i < retries; i++) {
     try {
       console.log(`[${i + 1}/${retries}] Connexion au Conductor : ${ADMIN_URL}`);
-      const adminWs = await AdminWebsocket.connect({ url: new URL(ADMIN_URL), timeout: 10000 });
+      const adminWs = await AdminWebsocket.connect({ url: new URL(ADMIN_URL), timeout: 10000, wsClientOptions: { origin: 'card-holochain' } });
 
       // Trouver le hApp installé
       const apps = await adminWs.listApps({});
@@ -56,6 +56,7 @@ async function initHolochain(retries = 40, delay = 5000) {
         url: new URL(`ws://localhost:${appPort}`),
         token: credentials.token,
         timeout: 10000,
+        wsClientOptions: { origin: 'card-holochain' },
       });
 
       console.log('Connecté au Conductor Holochain.');
