@@ -1,0 +1,25 @@
+services:
+  edgenode:
+    image: ghcr.io/holo-host/edgenode:latest
+    container_name: card-holochain-conductor
+    ports:
+      - "4444:4444"
+    volumes:
+      - holo-data:/data
+      - ./workdir/card-holochain.happ:/happs/card-holochain.happ
+    restart: unless-stopped
+
+  bridge:
+    build: ./bridge
+    container_name: card-holochain
+    ports:
+      - "3001:3001"
+    depends_on:
+      - edgenode
+    environment:
+      - CONDUCTOR_ADMIN_URL=ws://edgenode:4444
+      - PORT=3001
+    restart: unless-stopped
+
+volumes:
+  holo-data:

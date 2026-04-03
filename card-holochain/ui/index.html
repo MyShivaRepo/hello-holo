@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Card Holochain — Gestion de contacts</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- MODE LISTE -->
+  <div id="view-liste">
+    <header>
+      <h1>Contacts</h1>
+      <button class="btn btn-green" id="btn-ajouter">+ Ajouter</button>
+    </header>
+    <table id="table-contacts">
+      <thead>
+        <tr>
+          <th data-col="nom">Nom <span class="sort-icon"></span></th>
+          <th data-col="prenom">Prénom <span class="sort-icon"></span></th>
+          <th data-col="email">E-Mail <span class="sort-icon"></span></th>
+          <th data-col="telephone">Téléphone <span class="sort-icon"></span></th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+    <p id="empty-msg" class="hidden">Aucun contact enregistré.</p>
+    <div class="export-bar">
+      <button class="btn btn-blue btn-sm" id="btn-export-rdf">Exporter RDF/OWL</button>
+    </div>
+  </div>
+
+  <!-- MODE FICHE -->
+  <div id="view-fiche" class="hidden">
+    <header>
+      <h1 id="fiche-titre">Nouveau contact</h1>
+    </header>
+    <form id="form-contact">
+      <div class="field">
+        <label for="f-nom">Nom <span class="required">*</span></label>
+        <input id="f-nom" type="text" placeholder="Dupont" required />
+      </div>
+      <div class="field">
+        <label for="f-prenom">Prénom <span class="required">*</span></label>
+        <input id="f-prenom" type="text" placeholder="Jean" required />
+      </div>
+      <div class="field">
+        <label for="f-email">E-Mail</label>
+        <input id="f-email" type="email" placeholder="jean.dupont@exemple.fr" />
+      </div>
+      <div class="field">
+        <label for="f-telephone">Téléphone</label>
+        <input id="f-telephone" type="tel" placeholder="06 12 34 56 78" />
+      </div>
+      <p id="form-error" class="error hidden"></p>
+      <div class="form-actions">
+        <button type="button" class="btn btn-outline" id="btn-annuler">Annuler</button>
+        <button type="submit" class="btn btn-blue">Valider</button>
+      </div>
+    </form>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
