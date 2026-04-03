@@ -49,7 +49,7 @@ async function initHolochain(retries = 40, delay = 5000) {
         single_use: false,
       });
 
-      await adminWs.close();
+      adminWs.client.close();
 
       // Connexion à l'interface applicative
       appClient = await AppWebsocket.connect({
