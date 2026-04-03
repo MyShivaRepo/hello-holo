@@ -4,6 +4,7 @@ services:
     container_name: card-holochain-conductor
     ports:
       - "4444:4444"
+      - "3001:3001"
     volumes:
       - holo-data:/data
       - ./workdir/card-holochain.happ:/happs/card-holochain.happ
@@ -12,12 +13,11 @@ services:
   bridge:
     build: ./bridge
     container_name: card-holochain
-    ports:
-      - "3001:3001"
+    network_mode: "service:edgenode"
     depends_on:
       - edgenode
     environment:
-      - CONDUCTOR_ADMIN_URL=ws://edgenode:4444
+      - CONDUCTOR_ADMIN_URL=ws://localhost:4444
       - PORT=3001
     volumes:
       - ./ui:/ui
