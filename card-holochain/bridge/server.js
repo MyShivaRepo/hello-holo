@@ -36,20 +36,26 @@ async function initHolochain(retries = 40, delay = 5000) {
       cellId = [contactsCell.cell_id.dna_hash, contactsCell.cell_id.agent_pub_key];
 
       // Autoriser les credentials de signature pour cette cell
+      console.log('→ authorizeSigningCredentials...');
       await adminWs.authorizeSigningCredentials(cellId);
+      console.log('→ authorizeSigningCredentials OK');
 
       // Attacher une interface applicative
+      console.log('→ attachAppInterface...');
       const { port: appPort } = await adminWs.attachAppInterface({
         port: 0,
         allowed_origins: '*',
       });
+      console.log(`→ attachAppInterface OK, port=${appPort}`);
 
       // Autoriser la signing key pour l'app
+      console.log('→ issueAppAuthenticationToken...');
       const credentials = await adminWs.issueAppAuthenticationToken({
         installed_app_id: installedAppId,
         expiry_seconds: 0,
         single_use: false,
       });
+      console.log('→ issueAppAuthenticationToken OK');
 
       adminWs.client.close();
 
