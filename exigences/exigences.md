@@ -7,7 +7,7 @@ Un ```Contact``` à 4 attributs :
   - Nom
   - Prénom
   - E-Mail
-  -Téléphone
+  - Téléphone
 
 # Interface utilisateur
 # Exigences techniques
