@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Bridge REST API entre le frontend et le Conductor Holochain",
   "main": "server.js",
+  "type": "module",
   "scripts": {
     "start": "node server.js"
   },

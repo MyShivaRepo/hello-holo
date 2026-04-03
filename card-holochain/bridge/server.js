@@ -1,6 +1,9 @@
-const express = require('express');
-const path = require('path');
-const { AdminWebsocket, AppWebsocket } = require('@holochain/client');
+import express from 'express';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { AdminWebsocket, AppWebsocket } from '@holochain/client';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const app = express();
 const PORT = process.env.PORT || 3001;
