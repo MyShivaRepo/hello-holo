@@ -42,7 +42,6 @@ async function initHolochain(retries = 40, delay = 5000) {
       const { port: appPort } = await adminWs.attachAppInterface({
         port: 0,
         allowed_origins: '*',
-        installed_app_id: null,
       });
 
       // Autoriser la signing key pour l'app
