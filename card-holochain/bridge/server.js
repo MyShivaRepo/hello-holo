@@ -35,6 +35,9 @@ async function initHolochain(retries = 40, delay = 5000) {
       if (!contactsCell) throw new Error('cell contacts non trouvée');
       cellId = [contactsCell.cell_id.dna_hash, contactsCell.cell_id.agent_pub_key];
 
+      // Autoriser les credentials de signature pour cette cell
+      await adminWs.authorizeSigningCredentials(cellId);
+
       // Attacher une interface applicative
       const { port: appPort } = await adminWs.attachAppInterface({
         port: 0,
@@ -74,6 +77,7 @@ async function callZome(fnName, payload = null) {
     cell_id: cellId,
     zome_name: 'contacts',
     fn_name: fnName,
+    provenance: cellId[1],
     payload,
   });
 }
