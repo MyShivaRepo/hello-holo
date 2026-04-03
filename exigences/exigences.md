@@ -26,3 +26,6 @@ Le mode `fiche` permet d'ajouter et/ou de modifier un `Contact`. Un bouton `Vali
 - L'application doit être hébergée dans un container Docker.
 - Elle est accessible via un port spécifique de la machine locale (port à définir au démarrage du développement).
 - L'architecture de l'application doit permettre de modifier l'interface utilisateur sans perdre la base de données existante.
+
+L'application `card-classic` tourne sur <a href="[http://localhost:3000)/">http://localhost:3000</a>   
+L'application `card-holochain` tourne sur <a href="[http://localhost:3001)/">http://localhost:3001</a>
