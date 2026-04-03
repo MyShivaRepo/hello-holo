@@ -22,7 +22,7 @@ La dernière colonne du tableau dispose de 2 boutons :
   - Un bouton ```Modifier``` qui permet d'accéder aux attibuts du ```Contact``` en mode ```fiche``` (couleur bleu).
   - Un bouton ```Supprimer``` qui permet de détruire définitivelent le ```Contact``` (couleur rouge).
 
-Le mode ```fiche``` est le mode utilisé pour ajouter et/ou modifier un ```Contact```.
+Le mode ```fiche``` est le mode utilisé pour ajouter et/ou modifier un ```Contact```.   
 Un bouton ```Valider``` permet d'enregister un nouveau ```Contact``` ou bien de valider les modifications d'un ```Contact``` existant.
 
 # Exigences techniques
