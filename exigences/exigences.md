@@ -2,7 +2,7 @@
 Le besoin exprimé ici est commun aux applications ```card-classic``` eyt ```card-holochain```
 
 # Modèle de concepts
-L'application ne manipule qu'un seul concept : le ```Contact```
+L'application ne manipule qu'un seul concept : le ```Contact```.    
 Un ```Contact``` à 4 attributs : 
   - Nom
   - Prénom
