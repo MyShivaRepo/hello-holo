@@ -6,7 +6,7 @@ members = [
 resolver = "2"
 
 [workspace.dependencies]
-hdi = { git = "https://github.com/holochain/holochain", branch = "develop" }
-hdk = { git = "https://github.com/holochain/holochain", branch = "develop" }
+hdi = { git = "https://github.com/holochain/holochain", tag = "holochain-0.6.1-rc.3" }
+hdk = { git = "https://github.com/holochain/holochain", tag = "holochain-0.6.1-rc.3" }
 serde = { version = "1", features = ["derive"] }
 holochain_serialized_bytes = "0.0.56"
