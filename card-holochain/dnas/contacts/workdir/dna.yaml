@@ -1,0 +1,14 @@
+---
+manifest_version: "0"
+name: contacts
+integrity:
+  network_seed: ~
+  zomes:
+    - name: contacts_integrity
+      path: ../../../target/wasm32-unknown-unknown/release/contacts_integrity.wasm
+coordinator:
+  zomes:
+    - name: contacts
+      path: ../../../target/wasm32-unknown-unknown/release/contacts.wasm
+      dependencies:
+        - name: contacts_integrity

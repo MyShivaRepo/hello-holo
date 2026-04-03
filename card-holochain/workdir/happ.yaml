@@ -1,0 +1,12 @@
+---
+manifest_version: "0"
+name: card-holochain
+roles:
+  - name: contacts
+    provisioning:
+      strategy: create
+      deferred: false
+    dna:
+      path: ../dnas/contacts/workdir/contacts.dna
+      modifiers:
+        network_seed: ~

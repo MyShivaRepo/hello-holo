@@ -1,0 +1,12 @@
+[workspace]
+members = [
+  "dnas/contacts/zomes/integrity/contacts_integrity",
+  "dnas/contacts/zomes/coordinator/contacts",
+]
+resolver = "2"
+
+[workspace.dependencies]
+hdi = { git = "https://github.com/holochain/holochain", branch = "develop" }
+hdk = { git = "https://github.com/holochain/holochain", branch = "develop" }
+serde = { version = "1", features = ["derive"] }
+holochain_serialized_bytes = "0.0.56"
