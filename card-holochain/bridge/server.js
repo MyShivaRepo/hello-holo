@@ -16,7 +16,7 @@ let appClient;
 let cellId;
 
 // Connexion au Conductor Holochain avec retry
-async function initHolochain(retries = 20, delay = 3000) {
+async function initHolochain(retries = 40, delay = 5000) {
   for (let i = 0; i < retries; i++) {
     try {
       console.log(`[${i + 1}/${retries}] Connexion au Conductor : ${ADMIN_URL}`);
