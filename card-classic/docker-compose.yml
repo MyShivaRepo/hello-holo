@@ -1,0 +1,17 @@
+services:
+  card-classic:
+    build:
+      context: .
+      tags:
+        - "card-classic:latest"
+    image: card-classic
+    container_name: card-classic
+    ports:
+      - "3000:3000"
+    volumes:
+      - db-data:/app/data
+      - ./public:/app/public
+    restart: unless-stopped
+
+volumes:
+  db-data:
