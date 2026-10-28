@@ -1,0 +1,10 @@
+{
+  "name": "holochain-network-viewer",
+  "private": true,
+  "type": "module",
+  "description": "Tableau de bord lecture-seule du réseau/pairs d'un conducteur Holochain (API admin).",
+  "dependencies": {
+    "@holochain/client": "^0.20.0",
+    "express": "^4.19.2"
+  }
+}

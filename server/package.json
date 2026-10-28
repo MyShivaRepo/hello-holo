@@ -1,0 +1,13 @@
+{
+  "name": "hrea-graphql-server",
+  "private": true,
+  "type": "module",
+  "description": "Serveur HTTP exposant l'API GraphQL hREA (avec GraphiQL) par-dessus le WebSocket app Holochain.",
+  "dependencies": {
+    "@holochain/client": "^0.20.0",
+    "@valueflows/vf-graphql-holochain": "0.600.0-rc.0",
+    "graphql": "15.8.0",
+    "express": "^4.19.2",
+    "express-graphql": "^0.12.0"
+  }
+}

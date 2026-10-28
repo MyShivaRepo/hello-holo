@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Réseau Holochain</title>
+<style>
+  :root {
+    --bg:#f6f7f9; --panel:#fff; --ink:#1c2024; --muted:#5b6570; --border:#e2e6ea;
+    --accent:#3457d5; --ok:#1f8a4c; --warn:#b26b00; --err:#b3261e; --th:#eef1f5; --chip:#eef2f7; --self:#3457d5;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg:#111418; --panel:#1a1f25; --ink:#e7ebee; --muted:#9aa4ad; --border:#2b3238;
+      --accent:#6d8bff; --ok:#4fd18b; --warn:#e0a44c; --err:#ff6b61; --th:#222a31; --chip:#222a31; --self:#6d8bff;
+    }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+  header{position:sticky;top:0;z-index:5;background:var(--panel);border-bottom:1px solid var(--border);
+    padding:14px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  header h1{font-size:17px;margin:0}
+  .sub{color:var(--muted);font-size:12px}
+  #status{padding:4px 10px;border-radius:999px;background:var(--chip);font-size:12px}
+  #status.ok{color:var(--ok)} #status.err{color:var(--err)}
+  .spacer{margin-left:auto}
+  .ctrl{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px}
+  main{max-width:1080px;margin:0 auto;padding:18px 20px 60px;display:grid;gap:16px}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px}
+  .card h2{font-size:12px;margin:0 0 12px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);
+    display:flex;align-items:center;gap:8px}
+  .count{background:var(--chip);border-radius:999px;padding:1px 8px;font-size:11px;color:var(--ink)}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;padding:7px 9px;border-bottom:1px solid var(--border);vertical-align:top}
+  th{background:var(--th);font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted)}
+  code.h{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;color:var(--muted)}
+  .tag{display:inline-block;font-size:10.5px;padding:1px 7px;border-radius:999px;background:var(--chip);color:var(--muted)}
+  .tag.ok{color:var(--ok)} .tag.self{color:var(--self);border:1px solid var(--self)}
+  .empty{color:var(--muted);font-style:italic;padding:8px}
+  .app{border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:10px;background:var(--bg)}
+  .app-h{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+  .app-name{font-weight:650;font-size:15px}
+  .cells{display:grid;gap:2px}
+  .cell{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:12px;padding:5px 0;border-top:1px dashed var(--border)}
+  .cell .role{font-weight:600}
+  .cell .mut{color:var(--muted)}
+  .kv{display:grid;grid-template-columns:150px 1fr;gap:4px 12px;font-size:13px}
+  .kv div:nth-child(odd){color:var(--muted)}
+  pre{margin:0;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;
+    overflow:auto;max-height:240px;font-size:11.5px}
+  .big{font-size:22px;font-weight:700}
+  .banner{font-size:12px;color:var(--warn)}
+</style>
+</head>
+<body>
+<header>
+  <h1>Réseau Holochain <span class="sub">viewer</span></h1>
+  <span id="status">connexion…</span>
+  <div class="spacer"></div>
+  <label class="ctrl"><input type="checkbox" id="auto" checked /> auto-refresh</label>
+  <span class="ctrl" id="updated"></span>
+</header>
+
+<main>
+  <div class="card">
+    <h2>Conducteur — hApps &amp; cellules <span class="count" id="c-cells">0</span></h2>
+    <div id="apps"></div>
+  </div>
+
+  <div class="card">
+    <h2>Pairs connus <span class="sub">(agentInfo)</span> <span class="count" id="c-agents">0</span></h2>
+    <p class="banner" id="agents-note"></p>
+    <div id="agents"></div>
+  </div>
+
+  <div class="card">
+    <h2>Transport <span class="sub">(dumpNetworkStats)</span></h2>
+    <div id="transport"></div>
+  </div>
+
+  <div class="card">
+    <h2>Métriques réseau <span class="sub">(dumpNetworkMetrics)</span></h2>
+    <div id="metrics"></div>
+  </div>
+</main>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const esc = (s) => (s==null?'':String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])));
+const short = (h) => h ? (h.slice(0,10)+'…'+h.slice(-6)) : '—';
+
+function table(cols, rows){
+  if(!rows.length) return '<div class="empty">Aucun élément.</div>';
+  return '<table><thead><tr>'+cols.map(c=>`<th>${c.h}</th>`).join('')+'</tr></thead><tbody>'
+    + rows.map(r=>'<tr>'+cols.map(c=>`<td>${c.f(r)}</td>`).join('')+'</tr>').join('')+'</tbody></table>';
+}
+
+function renderApps(d){
+  const apps = d.apps||[];
+  let cellCount = 0;
+  const html = apps.map(a=>{
+    cellCount += a.cells.length;
+    const cells = a.cells.map(c=>`<div class="cell">
+        <span class="tag ${c.kind==='provisioned'?'ok':''}">${esc(c.kind)}</span>
+        <span class="role">${esc(c.role)}</span>${c.cloneId?` <span class="mut">clone: ${esc(c.cloneId)}</span>`:''}
+        <span class="mut">DNA</span> <code class="h">${short(c.dnaHash)}</code>
+        <span class="mut">agent</span> <code class="h">${short(c.agentKey)}</code>
+      </div>`).join('') || '<div class="empty">aucune cellule</div>';
+    const n = a.cells.length;
+    return `<div class="app">
+      <div class="app-h"><span class="app-name">${esc(a.id)}</span>
+        <span class="tag ok">${esc(a.status)}</span>
+        <span class="count">${n} cellule${n>1?'s':''}</span></div>
+      <div class="cells">${cells}</div>
+    </div>`;
+  }).join('') || '<div class="empty">Aucune app.</div>';
+  $('#apps').innerHTML = html;
+  $('#c-cells').textContent = `${apps.length} hApps · ${(d.cells||[]).length||cellCount} cellules`;
+}
+
+function renderAgents(d){
+  const self = new Set(d.selfAgents||[]);
+  const rows = (d.agents||[]).map(a=>{
+    const info = a.info || a;
+    const agent = info.agent || info.agentKey || a.agent || null;
+    const url = info.url || info.dialUrl || null;
+    const space = info.space || info.dna || null;
+    const exp = info.expiresAt || info.expires_at || info.expiry || null;
+    const arc = info.storageArc || info.storage_arc || null;
+    return { agent, url, space, exp, arc, isSelf: agent && self.has(agent), raw: a.raw };
+  });
+  $('#c-agents').textContent = rows.length;
+  $('#agents').innerHTML = table(
+    [ {h:'Agent',f:r=>`<code class="h">${short(r.agent)}</code> ${r.isSelf?'<span class="tag self">toi</span>':''}`},
+      {h:'Espace/DNA',f:r=>`<code class="h">${short(r.space)}</code>`},
+      {h:'URL',f:r=>r.url?`<code class="h">${esc(String(r.url).slice(0,60))}</code>`:'—'},
+      {h:'Arc',f:r=>r.arc?`<span class="tag">${esc(JSON.stringify(r.arc))}</span>`:'—'} ],
+    rows);
+}
+
+function renderTransport(d){
+  const t = d.transport && d.transport.transport_stats;
+  if(!t){ $('#transport').innerHTML = `<div class="empty">${esc((d.errors&&d.errors.stats)||'indisponible')}</div>`; return; }
+  const conns = t.connections||[];
+  $('#transport').innerHTML =
+    `<div class="kv">
+       <div>Backend</div><div><strong>${esc(t.backend||'?')}</strong></div>
+       <div>Connexions actives</div><div class="big" style="color:${conns.length?'var(--ok)':'var(--muted)'}">${conns.length}</div>
+       <div>Relais / peer URLs</div><div>${(t.peer_urls||[]).map(u=>`<code class="h">${esc(String(u).slice(0,70))}</code>`).join('<br>')||'—'}</div>
+     </div>`
+    + (conns.length?`<pre>${esc(JSON.stringify(conns,null,2))}</pre>`:'');
+}
+
+function renderMetrics(d){
+  if(!d.metrics){ $('#metrics').innerHTML = `<div class="empty">${esc((d.errors&&d.errors.metrics)||'indisponible')}</div>`; return; }
+  const keys = Object.keys(d.metrics);
+  if(!keys.length){ $('#metrics').innerHTML = '<div class="empty">Aucune métrique.</div>'; return; }
+  $('#metrics').innerHTML = keys.map(k=>{
+    const m=d.metrics[k];
+    const peers = (m.gossip_state_summary&&m.gossip_state_summary.peer_meta&&Object.keys(m.gossip_state_summary.peer_meta).length)
+      ?? (Array.isArray(m.peers)?m.peers.length:null);
+    return `<div style="margin-bottom:8px"><code class="h">${short(k)}</code>${peers!=null?` — <span class="tag">${peers} pair(s)</span>`:''}
+      <pre>${esc(JSON.stringify(m,null,2)).slice(0,1200)}</pre></div>`;
+  }).join('');
+}
+
+async function refresh(){
+  try{
+    const d = await (await fetch('/api/network',{cache:'no-store'})).json();
+    $('#status').textContent='connecté'; $('#status').className='ok';
+    $('#updated').textContent = 'maj: '+new Date(d.at).toLocaleTimeString();
+    renderApps(d); renderAgents(d); renderTransport(d); renderMetrics(d);
+    const conns=((d.transport||{}).transport_stats||{}).connections||[];
+    $('#agents-note').textContent = conns.length ? ''
+      : 'Aucun pair distant connecté — réseau à un seul nœud (ces agents sont les tiens).';
+  }catch(e){
+    $('#status').textContent='hors ligne'; $('#status').className='err';
+  }
+}
+let timer=null;
+function loop(){ if(timer) clearInterval(timer); if($('#auto').checked){ timer=setInterval(refresh,4000);} }
+$('#auto').onchange=loop;
+refresh(); loop();
+</script>
+</body>
+</html>

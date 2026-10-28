@@ -1,0 +1,16 @@
+# Dépendances
+**/node_modules/
+**/package-lock.json
+
+# Artefacts de hApps téléchargés / dérivés (régénérables via apps/add-happ.sh)
+apps/*.happ
+apps/*.webhapp
+apps/*.zip
+apps/*-ui/
+apps/kando-extract/
+
+# NB : hrea.happ (racine) est VOLONTAIREMENT versionné — requis par le Dockerfile.
+
+# Divers
+.DS_Store
+*.log

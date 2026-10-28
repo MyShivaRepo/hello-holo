@@ -1,0 +1,124 @@
+services:
+  holochain-hrea:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: hello-holo/holochain-hrea:0.4.0-beta
+    platform: linux/amd64            # binaires Holochain fournis par le cache cachix
+    container_name: holochain-hrea
+    environment:
+      ADMIN_PORT: "4444"
+      APP_PORT: "4445"
+      APP_ID: "hrea"
+      LAIR_PASSPHRASE: "hrea"         # passphrase du keystore lair (dev uniquement)
+    ports:
+      - "4444:4444"                  # Admin websocket
+      - "4445:4445"                  # App websocket
+      - "4003:4003"                  # IHM + API GraphQL hREA (servie par le sidecar hrea-graphql)
+      - "4455:4455"                  # App websocket ré-exposé en 0.0.0.0 (relais socat, pour les UI navigateur)
+    volumes:
+      - hrea-data:/data              # persistance des donnees du conducteur
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
+
+  # Sidecar : expose hREA en GraphQL HTTP (+ GraphiQL) sur http://localhost:4000/graphql
+  # Il PARTAGE la pile reseau du node (network_mode: service:...), donc il joint
+  # les WebSockets sur 127.0.0.1 quel que soit leur bind ; le port 4000 est
+  # publie par le service holochain-hrea ci-dessus.
+  hrea-graphql:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    image: hello-holo/hrea-graphql:0.4.0-beta
+    platform: linux/amd64
+    container_name: hrea-graphql
+    network_mode: "service:holochain-hrea"
+    environment:
+      HREA_ADMIN_URL: ws://127.0.0.1:4444
+      HREA_APP_URL: ws://127.0.0.1:4445
+      HREA_APP_ID: hrea
+      HREA_ROLE: hrea
+      PORT: "4003"
+    depends_on:
+      - holochain-hrea
+    restart: unless-stopped
+
+  # Relais TCP : ré-expose l'interface app (127.0.0.1:4445 dans le conducteur)
+  # sur 0.0.0.0:4455, afin qu'un navigateur (via le port publié 4455) puisse
+  # ouvrir le WebSocket app. Partage la pile réseau du conducteur.
+  appws-proxy:
+    image: alpine/socat:latest
+    platform: linux/amd64
+    container_name: appws-proxy
+    network_mode: "service:holochain-hrea"
+    command: ["TCP-LISTEN:4455,fork,reuseaddr", "TCP:127.0.0.1:4445"]
+    depends_on:
+      - holochain-hrea
+    restart: unless-stopped
+
+  # Tableau de bord réseau/pairs (lecture seule via l'API admin). Service
+  # indépendant : l'admin (4444) écoute en 0.0.0.0, donc joignable via le
+  # réseau Docker interne ; le viewer publie son propre port 4001.
+  network-viewer:
+    build:
+      context: ./network-viewer
+      dockerfile: Dockerfile
+    image: hello-holo/network-viewer:0.4.0-beta
+    platform: linux/amd64
+    container_name: network-viewer
+    environment:
+      HREA_ADMIN_URL: ws://holochain-hrea:4444
+      HREA_ORIGIN: http://localhost
+      PORT: "4001"
+    volumes:
+      - ./network-viewer/public:/app/public:ro   # UI en bind-mount : édition instantanée
+    ports:
+      - "4001:4001"
+    depends_on:
+      - holochain-hrea
+    restart: unless-stopped
+
+  # IHM de KanDo (build patché servi en statique). L'UI se connecte au
+  # conducteur via l'admin 4444 et le relais app 4455.
+  kando-ui:
+    image: nginx:alpine
+    container_name: kando-ui
+    volumes:
+      - ./apps/kando-ui:/usr/share/nginx/html:ro
+    ports:
+      - "4002:80"
+    restart: unless-stopped
+
+  # IHM de talking-stickies (build patché servi en statique) — expérimental.
+  talking-stickies-ui:
+    image: nginx:alpine
+    container_name: talking-stickies-ui
+    volumes:
+      - ./apps/talking-stickies-ui:/usr/share/nginx/html:ro
+    ports:
+      - "4004:80"
+    restart: unless-stopped
+
+  # IHM d'emergence (build patché servi en statique) — expérimental.
+  emergence-ui:
+    image: nginx:alpine
+    container_name: emergence-ui
+    volumes:
+      - ./apps/emergence-ui:/usr/share/nginx/html:ro
+    ports:
+      - "4005:80"
+    restart: unless-stopped
+
+  # Portail / jump page : liens vers toutes les hApps du conducteur.
+  portal:
+    image: nginx:alpine
+    container_name: portal
+    volumes:
+      - ./portal:/usr/share/nginx/html:ro
+    ports:
+      - "4000:80"
+    restart: unless-stopped
+
+volumes:
+  hrea-data:

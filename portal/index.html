@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>hello-holo — Portail</title>
+<style>
+  :root{
+    --bg:#f6f7f9;--panel:#fff;--ink:#1c2024;--muted:#5b6570;--border:#e2e6ea;
+    --accent:#3457d5;--ok:#1f8a4c;--chip:#eef2f7;--shadow:0 1px 3px rgba(0,0,0,.06);
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#111418;--panel:#1a1f25;--ink:#e7ebee;--muted:#9aa4ad;--border:#2b3238;
+      --accent:#6d8bff;--ok:#4fd18b;--chip:#222a31;--shadow:0 1px 3px rgba(0,0,0,.4);
+    }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+  .wrap{max-width:960px;margin:0 auto;padding:40px 22px 70px}
+  header{margin-bottom:28px}
+  h1{font-size:26px;margin:0 0 6px;letter-spacing:.2px}
+  .lead{color:var(--muted);font-size:14px;margin:0}
+  h2{font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);
+    margin:30px 0 12px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+  a.card{display:block;text-decoration:none;color:inherit;background:var(--panel);
+    border:1px solid var(--border);border-radius:14px;padding:18px;box-shadow:var(--shadow);
+    transition:transform .08s ease,border-color .12s ease}
+  a.card:hover{transform:translateY(-2px);border-color:var(--accent)}
+  .row{display:flex;align-items:center;gap:12px}
+  .ico{width:42px;height:42px;border-radius:10px;background:var(--chip);display:grid;
+    place-items:center;font-size:22px;flex:none}
+  .name{font-size:16px;font-weight:650}
+  .port{font-size:12px;color:var(--accent);font-family:ui-monospace,Menlo,monospace}
+  .desc{color:var(--muted);font-size:13px;margin:10px 0 0}
+  .count{background:var(--chip);border-radius:999px;padding:1px 9px;font-size:11px;color:var(--muted);margin-left:6px}
+  .card.off{cursor:default}
+  .card.off:hover{transform:none;border-color:var(--border)}
+  .tag2{font-size:10.5px;padding:1px 8px;border-radius:999px;background:var(--chip);color:var(--muted);font-family:ui-monospace,Menlo,monospace}
+  .sub{margin-top:8px}
+  .sub a{color:var(--accent);font-size:12px;text-decoration:none;margin-right:12px}
+  .sub a:hover{text-decoration:underline}
+  table{width:100%;border-collapse:collapse;font-size:13px;background:var(--panel);
+    border:1px solid var(--border);border-radius:12px;overflow:hidden}
+  th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--border)}
+  th{background:var(--chip);font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted)}
+  tr:last-child td{border-bottom:none}
+  code{font-family:ui-monospace,Menlo,monospace;font-size:12px;color:var(--muted)}
+  .foot{margin-top:34px;color:var(--muted);font-size:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>hello-holo <span style="color:var(--muted);font-weight:400">· Portail</span></h1>
+    <p class="lead">Point d'entrée vers les hApps et outils d'un même conducteur <strong>Holochain</strong> (0.6.3).</p>
+  </header>
+
+  <h2>hApps &amp; outils <span class="count" id="c-apps"></span></h2>
+  <div class="grid" id="apps"></div>
+
+  <h2>Conducteur — points d'accès (WebSocket)</h2>
+  <table>
+    <thead><tr><th>Port</th><th>Interface</th><th>Usage</th></tr></thead>
+    <tbody>
+      <tr><td><code>4444</code></td><td>Admin WebSocket</td><td>Gestion du conducteur (installer/activer des apps, réseau…)</td></tr>
+      <tr><td><code>4445</code></td><td>App WebSocket</td><td>Appels applicatifs (zome calls) — écoute locale dans le conducteur</td></tr>
+      <tr><td><code>4455</code></td><td>App WebSocket (relais)</td><td>Ré-exposition <code>0.0.0.0</code> pour les UI navigateur (via socat)</td></tr>
+    </tbody>
+  </table>
+
+  <p class="foot">Ces liens pointent vers <code>localhost</code> : ouvre cette page sur la machine qui héberge la stack Docker. Tous les ports d'accès sont dans la plage <strong>4000‑4999</strong>.</p>
+</div>
+<script>
+const $ = (s) => document.querySelector(s);
+const esc = (s) => (s==null?'':String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])));
+
+// hApps disposant d'une IHM (id du conducteur -> métadonnées). Complète ici
+// quand une app reçoit une UI ; sinon elle s'affiche en « backend ».
+const UI = {
+  hrea:  { name:'hREA — Console', port:4003, ico:'📒', desc:'ValueFlows : agents, spécifications, unités. (GraphiQL sur /graphql)' },
+  kando: { name:'KanDo — Kanban', port:4002, ico:'🗂️', desc:'Tableaux Kanban temps réel.' },
+  'talking-stickies': { name:'TalkingStickies', port:4004, ico:'🗒️', desc:'Notes/post-its collaboratifs temps réel.' },
+  emergence: { name:'Emergence', port:4005, ico:'🌀', desc:'Sessions, personnes et notes (unconférences).' },
+};
+// Outils (pas des hApps installées), affichés avec les apps et triés par port.
+const TOOLS = [{ name:'Réseau / Pairs', port:4001, ico:'🛰️', desc:'Vue lecture-seule du réseau : cellules, agents, transport.' }];
+
+const cardUI = (x) => `<a class="card" href="http://localhost:${x.port}" target="_blank" rel="noopener">
+    <div class="row"><div class="ico">${x.ico||'🔗'}</div><div><div class="name">${esc(x.name)}</div><div class="port">:${x.port}</div></div></div>
+    <p class="desc">${esc(x.desc||'')}</p></a>`;
+const cardBackend = (id) => `<div class="card off">
+    <div class="row"><div class="ico">🧩</div><div><div class="name">${esc(id)}</div> <span class="tag2">backend · sans IHM</span></div></div>
+    <p class="desc">Active dans le conducteur, mais <strong>sans IHM web</strong> → pas de port. Accès via le WebSocket app (<code>4445</code>/<code>4455</code>). Détails dans le viewer Réseau.</p></div>`;
+
+async function load(){
+  let ids;
+  try {
+    const d = await (await fetch('http://localhost:4001/api/network',{cache:'no-store'})).json();
+    ids = (d.apps||[]).map(a=>a.id);
+  } catch (e) { ids = Object.keys(UI); }               // repli si le viewer est indisponible
+  const front = ids.filter(id=>UI[id]).map(id=>({...UI[id],id}))
+                   .concat(TOOLS).sort((a,b)=>a.port-b.port);
+  const backend = ids.filter(id=>!UI[id]).sort();
+  $('#apps').innerHTML = front.map(cardUI).join('') + backend.map(cardBackend).join('');
+  $('#c-apps').textContent = `${ids.length} hApps installées`;
+}
+load();
+</script>
+</body>
+</html>

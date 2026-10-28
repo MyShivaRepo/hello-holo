@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>hREA — Console</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --panel: #ffffff; --ink: #1c2024; --muted: #5b6570;
+    --border: #e2e6ea; --accent: #2f6f4f; --accent-ink: #ffffff;
+    --err: #b3261e; --ok: #2f6f4f; --chip: #eef2f0; --th: #f0f3f5;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #14171a; --panel: #1c2126; --ink: #e7ebee; --muted: #9aa4ad;
+      --border: #2b3238; --accent: #4caf7d; --accent-ink: #0c130f;
+      --err: #ff6b61; --ok: #4caf7d; --chip: #232a2f; --th: #232a2f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+    font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  header { padding: 16px 22px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 12px; background: var(--panel); position: sticky; top: 0; z-index: 5; }
+  header h1 { font-size: 18px; margin: 0; letter-spacing: .3px; }
+  header .sub { color: var(--muted); font-size: 12px; }
+  #status { margin-left: auto; font-size: 12px; padding: 4px 10px; border-radius: 999px; background: var(--chip); }
+  #status.ok { color: var(--ok); } #status.err { color: var(--err); }
+  main { max-width: 1080px; margin: 0 auto; padding: 18px 22px 60px; }
+  nav { display: flex; gap: 6px; flex-wrap: wrap; margin: 6px 0 18px; }
+  nav button { border: 1px solid var(--border); background: var(--panel); color: var(--ink);
+    padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 13px; }
+  nav button.active { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  section.tab { display: none; }
+  section.tab.active { display: block; }
+  .grid { display: grid; grid-template-columns: 340px 1fr; gap: 18px; align-items: start; }
+  @media (max-width: 820px) { .grid { grid-template-columns: 1fr; } }
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+  .card h2 { font-size: 14px; margin: 0 0 12px; text-transform: uppercase; letter-spacing: .6px; color: var(--muted); }
+  label { display: block; font-size: 12px; color: var(--muted); margin: 10px 0 4px; }
+  input, select, textarea { width: 100%; padding: 8px 10px; border: 1px solid var(--border);
+    border-radius: 8px; background: var(--bg); color: var(--ink); font: inherit; }
+  textarea { resize: vertical; min-height: 54px; }
+  .row { display: flex; gap: 10px; } .row > * { flex: 1; }
+  button.primary { margin-top: 14px; width: 100%; background: var(--accent); color: var(--accent-ink);
+    border: none; padding: 10px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+  button.primary:disabled { opacity: .6; cursor: progress; }
+  .hint { font-size: 11.5px; color: var(--muted); margin-top: 8px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { background: var(--th); font-size: 11px; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); }
+  code.id { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; color: var(--muted); }
+  .between { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .ghost { border: 1px solid var(--border); background: var(--panel); color: var(--ink);
+    border-radius: 8px; padding: 6px 12px; cursor: pointer; font-size: 12px; }
+  .empty { color: var(--muted); font-style: italic; padding: 10px; }
+  #toast { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
+    max-width: 90%; padding: 10px 16px; border-radius: 8px; font-size: 13px; display: none; z-index: 20; }
+  #toast.show { display: block; }
+  #toast.ok { background: var(--accent); color: var(--accent-ink); }
+  #toast.err { background: var(--err); color: #fff; }
+  a.gql { margin-left: 8px; font-size: 12px; color: var(--accent); }
+</style>
+</head>
+<body>
+<header>
+  <h1>hREA <span class="sub">Console</span></h1>
+  <span class="sub">ValueFlows sur Holochain</span>
+  <a class="gql" href="/graphql" target="_blank">GraphiQL ↗</a>
+  <span id="status">connexion…</span>
+</header>
+
+<main>
+  <nav>
+    <button data-tab="agents" class="active">Agents</button>
+    <button data-tab="specs">Spécifications</button>
+    <button data-tab="units">Unités</button>
+    <button data-tab="events">Événements &amp; Ressources</button>
+  </nav>
+
+  <!-- AGENTS -->
+  <section class="tab active" id="tab-agents">
+    <div class="grid">
+      <div class="card">
+        <h2>Créer un agent</h2>
+        <label>Type</label>
+        <select id="ag-type">
+          <option value="person">Personne</option>
+          <option value="organization">Organisation</option>
+        </select>
+        <label>Nom *</label>
+        <input id="ag-name" placeholder="ex. Alice, Coopérative du Val" />
+        <label>Note</label>
+        <textarea id="ag-note" placeholder="optionnel"></textarea>
+        <button class="primary" id="ag-submit">Créer l'agent</button>
+      </div>
+      <div class="card">
+        <div class="between"><h2>Agents</h2><button class="ghost" data-reload="agents">Rafraîchir</button></div>
+        <div id="ag-list"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SPECS -->
+  <section class="tab" id="tab-specs">
+    <div class="grid">
+      <div class="card">
+        <h2>Créer une spécification de ressource</h2>
+        <label>Nom *</label>
+        <input id="rs-name" placeholder="ex. Vélo, Heure de travail, Pomme" />
+        <label>Note</label>
+        <textarea id="rs-note" placeholder="optionnel"></textarea>
+        <button class="primary" id="rs-submit">Créer la spécification</button>
+        <p class="hint">Une spécification décrit un <em>type</em> de ressource (le modèle), pas un exemplaire concret.</p>
+      </div>
+      <div class="card">
+        <div class="between"><h2>Spécifications</h2><button class="ghost" data-reload="specs">Rafraîchir</button></div>
+        <div id="rs-list"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- UNITS -->
+  <section class="tab" id="tab-units">
+    <div class="grid">
+      <div class="card">
+        <h2>Créer une unité de mesure</h2>
+        <label>Libellé *</label>
+        <input id="un-label" placeholder="ex. kilogramme, heure, pièce" />
+        <div class="row">
+          <div><label>Symbole *</label><input id="un-symbol" placeholder="kg, h, pc" /></div>
+          <div><label>Id OM2 *</label><input id="un-om" placeholder="kilogram" /></div>
+        </div>
+        <button class="primary" id="un-submit">Créer l'unité</button>
+        <p class="hint">L'identifiant OM2 est un code de vocabulaire de mesure (ex. <code>kilogram</code>, <code>hour</code>, <code>one</code>).</p>
+      </div>
+      <div class="card">
+        <div class="between"><h2>Unités</h2><button class="ghost" data-reload="units">Rafraîchir</button></div>
+        <div id="un-list"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- EVENTS -->
+  <section class="tab" id="tab-events">
+    <div class="grid">
+      <div class="card">
+        <h2>Enregistrer un événement économique</h2>
+        <label>Action *</label>
+        <select id="ev-action"></select>
+        <div class="row">
+          <div><label>Fournisseur *</label><select id="ev-provider"></select></div>
+          <div><label>Receveur *</label><select id="ev-receiver"></select></div>
+        </div>
+        <label>Ressource concernée</label>
+        <select id="ev-resmode">
+          <option value="new">Créer une nouvelle ressource</option>
+          <option value="existing">Ressource existante</option>
+          <option value="none">Aucune</option>
+        </select>
+        <div id="ev-newres">
+          <label>Nom de la nouvelle ressource</label>
+          <input id="ev-resname" placeholder="ex. Vélo n°1" />
+          <label>Conforme à la spécification</label>
+          <select id="ev-conforms"></select>
+        </div>
+        <div id="ev-existres" hidden>
+          <label>Ressource existante</label>
+          <select id="ev-resource"></select>
+        </div>
+        <div class="row">
+          <div><label>Quantité</label><input id="ev-qty" type="number" step="any" placeholder="ex. 1" /></div>
+          <div><label>Unité</label><select id="ev-unit"></select></div>
+        </div>
+        <label>Note</label>
+        <textarea id="ev-note" placeholder="optionnel"></textarea>
+        <button class="primary" id="ev-submit">Enregistrer l'événement</button>
+        <p class="hint">Pour <strong>créer un stock</strong> : action <code>raise</code>, « nouvelle ressource », une quantité et une unité. Certaines actions (produce/consume…) requièrent un processus.</p>
+      </div>
+      <div>
+        <div class="card" style="margin-bottom:18px">
+          <div class="between"><h2>Ressources économiques</h2><button class="ghost" data-reload="resources">Rafraîchir</button></div>
+          <div id="er-list"></div>
+        </div>
+        <div class="card">
+          <div class="between"><h2>Événements</h2><button class="ghost" data-reload="events">Rafraîchir</button></div>
+          <div id="ee-list"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div id="toast"></div>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const state = { agents: [], units: [], specs: [], resources: [], actions: [] };
+
+async function gql(query, variables) {
+  const res = await fetch('/graphql', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ query, variables }),
+  });
+  const json = await res.json();
+  if (json.errors && json.errors.length) throw new Error(json.errors.map(e => e.message).join(' | '));
+  return json.data;
+}
+function toast(msg, kind) {
+  const t = $('#toast'); t.textContent = msg; t.className = 'show ' + (kind || 'ok');
+  setTimeout(() => { t.className = ''; }, kind === 'err' ? 6000 : 3000);
+}
+const short = (id) => id ? id.slice(0, 8) + '…' + id.slice(-6) : '';
+const esc = (s) => (s == null ? '' : String(s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c])));
+function table(cols, rows) {
+  if (!rows.length) return '<div class="empty">Aucun élément.</div>';
+  return '<table><thead><tr>' + cols.map(c => `<th>${c.h}</th>`).join('') + '</tr></thead><tbody>'
+    + rows.map(r => '<tr>' + cols.map(c => `<td>${c.f(r)}</td>`).join('') + '</tr>').join('') + '</tbody></table>';
+}
+const opts = (arr, val, lab, placeholder) =>
+  (placeholder ? `<option value="">${placeholder}</option>` : '')
+  + arr.map(x => `<option value="${esc(val(x))}">${esc(lab(x))}</option>`).join('');
+
+// ---------- Tabs ----------
+document.querySelectorAll('nav button').forEach(b => b.onclick = () => {
+  document.querySelectorAll('nav button').forEach(x => x.classList.remove('active'));
+  document.querySelectorAll('section.tab').forEach(x => x.classList.remove('active'));
+  b.classList.add('active'); $('#tab-' + b.dataset.tab).classList.add('active');
+});
+document.querySelectorAll('[data-reload]').forEach(b => b.onclick = () => loaders[b.dataset.reload]());
+
+// ---------- Loaders ----------
+const edges = (c) => (c && c.edges ? c.edges.map(e => e.node) : []);
+const loaders = {
+  async agents() {
+    const d = await gql('{ agents(last:50){ edges{ node{ id name note } } } }');
+    state.agents = edges(d.agents);
+    $('#ag-list').innerHTML = table(
+      [{ h: 'Nom', f: r => esc(r.name) }, { h: 'Note', f: r => esc(r.note) }, { h: 'Id', f: r => `<code class="id">${short(r.id)}</code>` }],
+      state.agents);
+    const o = opts(state.agents, a => a.id, a => a.name, '—');
+    $('#ev-provider').innerHTML = o; $('#ev-receiver').innerHTML = o;
+  },
+  async specs() {
+    const d = await gql('{ resourceSpecifications(last:50){ edges{ node{ id name note } } } }');
+    state.specs = edges(d.resourceSpecifications);
+    $('#rs-list').innerHTML = table(
+      [{ h: 'Nom', f: r => esc(r.name) }, { h: 'Note', f: r => esc(r.note) }, { h: 'Id', f: r => `<code class="id">${short(r.id)}</code>` }],
+      state.specs);
+    $('#ev-conforms').innerHTML = opts(state.specs, s => s.id, s => s.name, '— aucune —');
+  },
+  async units() {
+    const d = await gql('{ units(last:50){ edges{ node{ id label symbol omUnitIdentifier } } } }');
+    state.units = edges(d.units);
+    $('#un-list').innerHTML = table(
+      [{ h: 'Libellé', f: r => esc(r.label) }, { h: 'Symbole', f: r => esc(r.symbol) }, { h: 'OM2', f: r => esc(r.omUnitIdentifier) }],
+      state.units);
+    $('#ev-unit').innerHTML = opts(state.units, u => u.id, u => `${u.label} (${u.symbol})`, '— aucune —');
+  },
+  async resources() {
+    const d = await gql(`{ economicResources(last:50){ edges{ node{
+      id name accountingQuantity{ hasNumericalValue hasUnit{ label symbol } }
+      conformsTo{ name } primaryAccountable{ name } } } } }`);
+    state.resources = edges(d.economicResources);
+    $('#er-list').innerHTML = table([
+      { h: 'Nom', f: r => esc(r.name) || '<span class="empty">(sans nom)</span>' },
+      { h: 'Quantité', f: r => r.accountingQuantity ? esc(r.accountingQuantity.hasNumericalValue) + ' ' + esc((r.accountingQuantity.hasUnit || {}).symbol || '') : '' },
+      { h: 'Spéc.', f: r => esc((r.conformsTo || {}).name) },
+      { h: 'Id', f: r => `<code class="id">${short(r.id)}</code>` },
+    ], state.resources);
+    $('#ev-resource').innerHTML = opts(state.resources, r => r.id, r => r.name || short(r.id), '—');
+  },
+  async events() {
+    const d = await gql(`{ economicEvents(last:50){ edges{ node{
+      id action{ id label } provider{ name } receiver{ name }
+      resourceQuantity{ hasNumericalValue hasUnit{ symbol } }
+      resourceInventoriedAs{ name } note } } } }`);
+    const rows = edges(d.economicEvents);
+    $('#ee-list').innerHTML = table([
+      { h: 'Action', f: r => esc((r.action || {}).label || (r.action || {}).id) },
+      { h: 'Qté', f: r => r.resourceQuantity ? esc(r.resourceQuantity.hasNumericalValue) + ' ' + esc((r.resourceQuantity.hasUnit || {}).symbol || '') : '' },
+      { h: 'Ressource', f: r => esc((r.resourceInventoriedAs || {}).name) },
+      { h: 'Fourn.→Rec.', f: r => esc((r.provider || {}).name) + ' → ' + esc((r.receiver || {}).name) },
+      { h: 'Note', f: r => esc(r.note) },
+    ], rows);
+  },
+  async actions() {
+    const d = await gql('{ actions{ id label } }');
+    state.actions = d.actions || [];
+    // "raise" en tête (cas le plus simple pour créer un stock)
+    state.actions.sort((a, b) => (a.id === 'raise' ? -1 : b.id === 'raise' ? 1 : a.id.localeCompare(b.id)));
+    $('#ev-action').innerHTML = opts(state.actions, a => a.id, a => `${a.label || a.id} (${a.id})`);
+  },
+};
+
+// ---------- Create handlers ----------
+function busy(btn, on, label) { btn.disabled = on; if (on) { btn.dataset.t = btn.textContent; btn.textContent = 'En cours…'; } else { btn.textContent = btn.dataset.t || label; } }
+
+$('#ag-submit').onclick = async () => {
+  const name = $('#ag-name').value.trim(); if (!name) return toast('Le nom est requis', 'err');
+  const note = $('#ag-note').value.trim() || null;
+  const isOrg = $('#ag-type').value === 'organization';
+  const b = $('#ag-submit'); busy(b, true);
+  try {
+    if (isOrg) {
+      await gql(`mutation($p:OrganizationCreateParams!){ createOrganization(organization:$p){ agent{ id name } } }`, { p: { name, note } });
+    } else {
+      await gql(`mutation($p:AgentCreateParams!){ createPerson(person:$p){ agent{ id name } } }`, { p: { name, note } });
+    }
+    $('#ag-name').value = ''; $('#ag-note').value = '';
+    toast('Agent créé'); await loaders.agents();
+  } catch (e) { toast(e.message, 'err'); } finally { busy(b, false, "Créer l'agent"); }
+};
+
+$('#rs-submit').onclick = async () => {
+  const name = $('#rs-name').value.trim(); if (!name) return toast('Le nom est requis', 'err');
+  const note = $('#rs-note').value.trim() || null;
+  const b = $('#rs-submit'); busy(b, true);
+  try {
+    await gql(`mutation($p:ResourceSpecificationCreateParams!){ createResourceSpecification(resourceSpecification:$p){ resourceSpecification{ id name } } }`, { p: { name, note } });
+    $('#rs-name').value = ''; $('#rs-note').value = '';
+    toast('Spécification créée'); await loaders.specs();
+  } catch (e) { toast(e.message, 'err'); } finally { busy(b, false, 'Créer la spécification'); }
+};
+
+$('#un-submit').onclick = async () => {
+  const label = $('#un-label').value.trim(), symbol = $('#un-symbol').value.trim(), om = $('#un-om').value.trim();
+  if (!label || !symbol || !om) return toast('Libellé, symbole et Id OM2 sont requis', 'err');
+  const b = $('#un-submit'); busy(b, true);
+  try {
+    await gql(`mutation($p:UnitCreateParams!){ createUnit(unit:$p){ unit{ id label symbol } } }`, { p: { label, symbol, omUnitIdentifier: om } });
+    $('#un-label').value = ''; $('#un-symbol').value = ''; $('#un-om').value = '';
+    toast('Unité créée'); await loaders.units();
+  } catch (e) { toast(e.message, 'err'); } finally { busy(b, false, "Créer l'unité"); }
+};
+
+$('#ev-resmode').onchange = () => {
+  const m = $('#ev-resmode').value;
+  $('#ev-newres').hidden = m !== 'new';
+  $('#ev-existres').hidden = m !== 'existing';
+};
+
+$('#ev-submit').onclick = async () => {
+  const action = $('#ev-action').value, provider = $('#ev-provider').value, receiver = $('#ev-receiver').value;
+  if (!action || !provider || !receiver) return toast('Action, fournisseur et receveur sont requis', 'err');
+  const event = { action, provider, receiver, hasPointInTime: new Date().toISOString() };
+  const note = $('#ev-note').value.trim(); if (note) event.note = note;
+  const qty = $('#ev-qty').value, unit = $('#ev-unit').value;
+  if (qty !== '') event.resourceQuantity = { hasNumericalValue: Number(qty), ...(unit ? { hasUnit: unit } : {}) };
+  const mode = $('#ev-resmode').value;
+  let newResource = null;
+  if (mode === 'new') {
+    const rn = $('#ev-resname').value.trim(); const conforms = $('#ev-conforms').value;
+    newResource = {}; if (rn) newResource.name = rn;
+    if (conforms) event.resourceConformsTo = conforms;
+  } else if (mode === 'existing') {
+    const rid = $('#ev-resource').value; if (rid) event.resourceInventoriedAs = rid;
+  }
+  const b = $('#ev-submit'); busy(b, true);
+  try {
+    await gql(`mutation($event:EconomicEventCreateParams!, $newResource:EconomicResourceCreateParams){
+      createEconomicEvent(event:$event, newInventoriedResource:$newResource){
+        economicEvent{ id action{ id } } economicResource{ id name } } }`,
+      { event, newResource: mode === 'new' ? newResource : null });
+    $('#ev-note').value = ''; $('#ev-qty').value = ''; $('#ev-resname').value = '';
+    toast('Événement enregistré'); await loaders.events(); await loaders.resources();
+  } catch (e) { toast(e.message, 'err'); } finally { busy(b, false, "Enregistrer l'événement"); }
+};
+
+// ---------- Boot ----------
+(async () => {
+  try {
+    await gql('{ __typename }');
+    $('#status').textContent = 'connecté'; $('#status').className = 'ok';
+  } catch (e) {
+    $('#status').textContent = 'hors ligne'; $('#status').className = 'err';
+  }
+  for (const k of ['agents', 'specs', 'units', 'actions', 'resources', 'events']) {
+    try { await loaders[k](); } catch (e) { console.error(k, e); }
+  }
+})();
+</script>
+</body>
+</html>
