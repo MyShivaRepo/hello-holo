@@ -1,4 +1,11 @@
-# Deuxième hApp dans le même conducteur : KanDo (avec IHM graphique)
+# hApps supplémentaires dans le conducteur
+
+> **Reconstituer tout d'un coup :** après `docker compose up -d`, lance
+> **`bash apps/provision.sh`** — il (re)télécharge, installe et patche toutes les
+> hApps du catalogue (`kando`, `talking-stickies`, `emergence`, `gamez`) de façon
+> idempotente. Le présent document détaille la méthode, sur l'exemple de KanDo.
+
+## KanDo (avec IHM graphique)
 
 Démonstration qu'un **conducteur Holochain héberge plusieurs hApps**, et qu'on
 peut faire tourner une **vraie interface graphique** (KanDo, tableaux Kanban)
@@ -38,7 +45,7 @@ dans un navigateur, contre notre conducteur Docker — à côté de hREA.
 
 ## Utilisation
 
-Ouvrir le portail <http://localhost:4009> puis « KanDo », ou directement
+Ouvrir le portail <http://localhost:4000> puis « KanDo », ou directement
 <http://localhost:4002> : créer un réseau, un profil, un tableau, des
 colonnes/cartes — tout est persisté dans le conducteur (cellules clonées).
 

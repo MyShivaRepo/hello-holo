@@ -33,11 +33,19 @@ Le conducteur héberge **5 hApps** (dont **4 avec interface graphique**), plus u
 ```bash
 docker compose build          # long la 1re fois (plusieurs Go téléchargés)
 docker compose up -d
+bash apps/provision.sh        # installe les hApps + (re)génère les IHM patchées
 ```
 
 Puis ouvre le **portail** :
 
 **<http://localhost:4000>**
+
+> Le cœur (conducteur + **hREA** + viewer + portail) est reconstitué par
+> `docker compose up -d`. Les **hApps supplémentaires** (`kando`,
+> `talking-stickies`, `emergence`, `gamez`) et leurs **IHM patchées** sont des
+> artefacts dérivés (`.gitignore`) ; **`apps/provision.sh`** les re-télécharge
+> (versions épinglées), les installe et patche leurs interfaces. Le script est
+> **idempotent** : on peut le relancer sans risque.
 
 Pour tout arrêter (les données persistent dans le volume `hrea-data`) :
 
@@ -108,7 +116,21 @@ curl -s -X POST http://localhost:4003/graphql -H 'Content-Type: application/json
   -d '{"query":"{ resourceSpecifications(last:10){ edges{ node{ id name } } } }"}'
 ```
 
-## Ajouter une hApp
+## Provisioning turnkey (reconstituer l'état complet)
+
+Après un `git clone`, une fois la stack démarrée (`docker compose up -d`) :
+
+```bash
+bash apps/provision.sh
+```
+
+Le script **`apps/provision.sh`** reconstitue l'état complet de façon
+**idempotente** : il télécharge les `.webhapp` (versions épinglées), extrait et
+installe chaque backend dans le conducteur, puis extrait/patche les IHM et
+démarre leurs sidecars. Le catalogue des hApps (URLs, `installed_app_id`, seed,
+port d'IHM) est défini en tête du script.
+
+## Ajouter une hApp (ponctuel)
 
 Un conducteur Holochain est **multi-hApps**. Pour en installer une nouvelle
 (backend) en une commande — la stack doit tourner :
@@ -118,7 +140,9 @@ bash apps/add-happ.sh <nom> <url-ou-fichier .webhapp|.happ> [app-id] [network-se
 ```
 
 Le script extrait le `.happ` d'un `.webhapp` si besoin, le copie dans le
-conducteur, puis l'installe et l'active via l'API admin.
+conducteur, puis l'installe et l'active via l'API admin. Pour une hApp que tu
+veux rendre **permanente/reproductible**, ajoute plutôt son entrée au catalogue
+de `apps/provision.sh`.
 
 Pour faire tourner **l'interface graphique** d'une hApp conçue pour le Holochain
 Launcher, voir `apps/README.md` et `client/patch-ui.py` (méthode de patch du
