@@ -77,13 +77,19 @@ Tous les points d'accès sont dans la plage **4000‑4999**.
 
 ## hApps installées dans le conducteur
 
-| `installed_app_id` | IHM | Description |
-|---|---|---|
-| `hrea` | `:4003` | ValueFlows : agents, spécifications de ressource, unités… |
-| `kando` | `:4002` | Kanban temps réel (basé sur `syn`) |
-| `talking-stickies` | `:4004` | Post-its/notes collaboratifs |
-| `emergence` | `:4005` | Sessions / unconférences |
-| `gamez` | — | Installée et active, mais **sans IHM web** ici (voir *Limites*) |
+Les **5 hApps** hébergées par le même conducteur (versions épinglées, cf. le
+catalogue en tête de `apps/provision.sh`) :
+
+| `installed_app_id` | Version | IHM | Description |
+|---|---|---|---|
+| `hrea` | `happ-0.4.0-beta` | `:4003` | ValueFlows : agents, spécifications de ressource, unités… |
+| `kando` | `v0.17.5` | `:4002` | Kanban temps réel (basé sur `syn`) |
+| `talking-stickies` | `v0.15.2` | `:4004` | Post-its/notes collaboratifs |
+| `emergence` | `v0.5.1` | `:4005` | Sessions / unconférences |
+| `gamez` | `v0.9.3` | — | Installée et active, mais **sans IHM web** ici (voir *Limites*) |
+
+> `hrea` est intégrée à l'image du conducteur ; les 4 autres sont provisionnées
+> par **`apps/provision.sh`** (voir *Provisioning turnkey*).
 
 ## Composants (arborescence)
 
